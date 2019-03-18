@@ -176,8 +176,8 @@ class Glitch:
 
 def _main(*args):
     g = Glitch()
-    glitchedFileList = g.glitch(*args)
-    print("glitchedFileList:"+ str(glitchedFileList))
+    g.glitch(*args)
+
     return g.enjoyglitch()
 
 def main(*args):
