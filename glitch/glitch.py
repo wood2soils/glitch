@@ -46,21 +46,24 @@ class Glitch:
 
     def glitch(self, infile, outfile='glitched.jpg', times=10, maximum=False, hard=False, mode='r'):
         mode, graphictext, times = self.prepare_glitchfile(infile, mode, times, maximum)
-        self.factory(outfile, mode, graphictext, times, hard)
+        return self.factory(outfile, mode, graphictext, times, hard)
 
     def enjoyglitch(self):
         _ = ("".join(random.sample(s, len(s))) for s in ('njo', 'litc'))
         return "E" + next(_) + "y G" + next(_) + "h."
 
     def factory(self, outfile, mode, graphictext, times, hard):
+        outFileArray = []
         for i in range(times):
             name = 'hard' if hard else mode.__name__
             glitchfile = outfile.replace(".jpg", "{0}_{1}.jpg".format(i, name))
+            outFileArray.append(glitchfile)
             with open(glitchfile, 'wb') as f:
                 g = self.machine(mode, graphictext, hard)
                 f.write(g)
             if os.path.getsize(glitchfile) == 0:
                 os.remove(glitchfile)
+        return outFileArray
 
     def prepare_glitchfile(self, infile, mode, times, maximum):
         mode = self.glitch_mode[mode]
@@ -90,7 +93,12 @@ class Glitch:
     def replace(self, infile):
         '''Replace: 任意の箇所のバイト列と 同サイズの任意のバイト列を入れ換える
         '''
-        gf = infile[31:]
+        if len(infile) >= 31:
+            idx = 31
+        else:
+            idx = int(len(infile)/2)
+        gf = infile[idx:]
+
         same_size_index = []
         while len(same_size_index) <= 1:
             index = random.randint(0,len(gf)-1)
@@ -99,50 +107,77 @@ class Glitch:
         else:
             same_size_index = random.choice(same_size_index[:])
         gf[index], gf[same_size_index] = gf[same_size_index], gf[index]
-        return infile[:31] + gf
+        return infile[:idx] + gf
 
     def increase(self, infile):
         '''Increase: 任意の箇所のバイト列と それより大きなサイズの任意のバイト列と入れ換える
         '''
-        gf = infile[31:]
+        if len(infile) >= 31:
+            idx = 31
+        else:
+            idx = int(len(infile)/2)-2
+
+        gf = infile[idx:]
         index = gf.index(random.choice(gf))
         index_len = len(gf[index])
-        large_size_index = random.choice([gf.index(g) for g in gf if len(g) > index_len])
-        gf[index], gf[large_size_index] = gf[large_size_index], gf[index]
-        return infile[:31] + gf
+        try:
+            array = [gf.index(g) for g in gf if len(g) > index_len]
+            if len(array) == 0:
+                array = [index-2,index-1]
+            else:
+                None
+            large_size_index = random.choice(array)
+            gf[index], gf[large_size_index] = gf[large_size_index], gf[index]
+        except IndexError:
+            return infile
+        return infile[:idx] + gf
 
     def decrease(self, infile):
         '''Decrease: 任意の箇所のバイト列を 削除する
         '''
-        gf = infile[31:]
+        if len(infile) >= 31:
+            idx = 31
+        else:
+            idx = int(len(infile)/2)
+
+        gf = infile[idx:]
         try:
             index = random.randint(len(gf)-1, 31)
         except ValueError:
             return infile
         gf = gf[:index] + gf[index+1:]
-        return infile[:31] + gf
+        return infile[:idx] + gf
 
     def swap(self, infile):
         '''Swap: 任意の箇所のバイト列と 他の任意の箇所のバイト列を入れ換える
         '''
-        gf = infile[31:]
+        if len(infile) >= 31:
+            idx = 31
+        else:
+            idx = int(len(infile)/2)
+        gf = infile[idx:]
         index = gf.index(random.choice(gf))
         another = gf.index(random.choice(gf))
         gf[index], gf[another] = gf[another], gf[index]
-        return infile[:31] + gf
+        return infile[:idx] + gf
 
     def changiling(self, infile):
         '''Changiling: 任意のバイト文字を 他の任意のバイト文字に置き換える
         '''
-        gf = infile[31:]
+        if len(infile) >= 31:
+            idx = 31
+        else:
+            idx = int(len(infile)/2)
+        gf = infile[idx:]
         baby, fetch = (self.word_toaster() for _ in range(2))
         gf = [g.replace(baby, fetch) for g in gf]
-        return infile[:31] + gf
+        return infile[:idx] + gf
 
 
 def _main(*args):
     g = Glitch()
-    g.glitch(*args)
+    glitchedFileList = g.glitch(*args)
+    print("glitchedFileList:"+ str(glitchedFileList))
     return g.enjoyglitch()
 
 def main(*args):
